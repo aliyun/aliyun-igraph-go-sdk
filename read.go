@@ -33,7 +33,6 @@ func (r *ReadRequest) SetQueryParams(params map[string]string) *ReadRequest {
 func (r *ReadRequest) BuildUri() url.URL {
 	uri := url.URL{Path: "app"}
 	query := map[string]string{}
-	query["app"] = "gremlin"
 	if len(r.QueryParams) != 0 {
 		for k, v := range r.QueryParams {
 			query[k] = v
@@ -41,20 +40,16 @@ func (r *ReadRequest) BuildUri() url.URL {
 	}
 
 	IP, err := LocalIP()
+	var queryIP = ""
 	if err != nil {
 		fmt.Println(err)
-		query["ip"] = "127.0.0.1"
+		queryIP = "ip=127.0.0.1"
 	} else {
-		query["ip"] = IP.String()
+		queryIP = "ip=" + IP.String()
 	}
-	var configStr = "config{outfmt=json&cache_only=false&no_cache=false}"
-	query["ip"] = query["ip"] + "?" + configStr + "&&" + r.QueryString
-
-	var params []string
-	for k, v := range query {
-		params = append(params, k+"="+v)
-	}
-	uri.RawQuery = strings.Join(params[:], "&")
+	var configStr = "config{outfmt=json&no_cache=false&cache_only=false}"
+	queryStr := queryIP + "?" + url.QueryEscape(configStr+"&&"+r.QueryString)
+	uri.RawQuery = strings.Join([]string{"app=gremlin", "src=" + query["src"], queryStr}, "&")
 	return uri
 }
 
