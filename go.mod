@@ -1,4 +1,4 @@
-module gitlab.alibaba-inc.com/igraph/aliyun-igraph-go-sdk
+module github.com/aliyun/aliyun-igraph-go-sdk
 
 go 1.19
 
