@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -17,6 +19,9 @@ type Client struct {
 }
 
 func NewClient(endpoint string, userName string, passWord string, src string) *Client {
+	if len(src) == 0 {
+		src = userName + "_" + endpoint
+	}
 	return &Client{
 		Endpoint:   endpoint,
 		UserName:   userName,
@@ -38,14 +43,24 @@ func (c *Client) WithRequestTimeout(timeout time.Duration) *Client {
 	return c
 }
 
+func (c *Client) buildReadUrl(readRequest ReadRequest) url.URL {
+	uri := url.URL{Path: "app"}
+	src := c.Src
+	rawUrl := readRequest.BuildUri()
+	uri.RawQuery = strings.Join([]string{"app=gremlin", "src=" + src, rawUrl}, "&")
+	return uri
+}
+
 func (c *Client) Read(readRequest ReadRequest) (*Response, error) {
 	vErr := readRequest.Validate()
 	if vErr != nil {
 		return nil, vErr
 	}
+	if len(c.Src) == 0 {
+		return nil, InvalidParamsError{"Src is empty"}
+	}
 
-	readRequest.AddQueryParam("src", c.Src)
-	buildUri := readRequest.BuildUri()
+	buildUri := c.buildReadUrl(readRequest)
 	uri := buildUri.RequestURI()
 	headers := map[string]string{}
 
@@ -73,6 +88,16 @@ func (c *Client) Read(readRequest ReadRequest) (*Response, error) {
 	} else {
 		return nil, NewBadResponseError(fmt.Sprintf("Failed to read, message:%v",
 			readResult.ErrorInfo), httpResp.Header, httpResp.StatusCode)
+	}
+
+	if len(readResult.Result) == 0 {
+		errorResult := ErrorResult{}
+		if jErr := json.Unmarshal(buf, &errorResult); jErr == nil {
+			if len(errorResult.Error) > 0 {
+				fmt.Println(errorResult)
+				return nil, NewBadResponseError("Illegal readResult:"+string(buf), httpResp.Header, httpResp.StatusCode)
+			}
+		}
 	}
 	return resp, nil
 }

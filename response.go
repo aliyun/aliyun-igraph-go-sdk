@@ -34,6 +34,9 @@ type ReadResult struct {
 	ErrorInfo []string `json:"error_info"`
 	Result    []Result `json:"result"`
 }
+type ErrorResult struct {
+	Error string `json:"error"`
+}
 
 type WriteResult struct {
 	Errno int `json:"errno"`

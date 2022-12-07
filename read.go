@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"strings"
 )
 
 type ReadRequest struct {
@@ -30,8 +29,7 @@ func (r *ReadRequest) SetQueryParams(params map[string]string) *ReadRequest {
 	return r
 }
 
-func (r *ReadRequest) BuildUri() url.URL {
-	uri := url.URL{Path: "app"}
+func (r *ReadRequest) BuildUri() string {
 	query := map[string]string{}
 	if len(r.QueryParams) != 0 {
 		for k, v := range r.QueryParams {
@@ -48,9 +46,8 @@ func (r *ReadRequest) BuildUri() url.URL {
 		queryIP = "ip=" + IP.String()
 	}
 	var configStr = "config{outfmt=json&no_cache=false&cache_only=false}"
-	queryStr := queryIP + "?" + url.QueryEscape(configStr+"&&"+r.QueryString)
-	uri.RawQuery = strings.Join([]string{"app=gremlin", "src=" + query["src"], queryStr}, "&")
-	return uri
+	rawUrl := queryIP + "?" + url.QueryEscape(configStr+"&&"+r.QueryString)
+	return rawUrl
 }
 
 func LocalIP() (net.IP, error) {
