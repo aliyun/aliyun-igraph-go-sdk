@@ -2,10 +2,13 @@ package aliyun_igraph_go_sdk
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"net/url"
 	"strings"
+)
+
+var (
+	localIp, _ = LocalIP()
 )
 
 type ReadRequest struct {
@@ -39,13 +42,11 @@ func (r *ReadRequest) BuildUri() url.URL {
 		}
 	}
 
-	IP, err := LocalIP()
 	var queryIP = ""
-	if err != nil {
-		fmt.Println(err)
+	if localIp != nil {
 		queryIP = "ip=127.0.0.1"
 	} else {
-		queryIP = "ip=" + IP.String()
+		queryIP = "ip=" + localIp.String()
 	}
 	var configStr = "config{outfmt=json&no_cache=false&cache_only=false}"
 	queryStr := queryIP + "?" + url.QueryEscape(configStr+"&&"+r.QueryString)
