@@ -1,10 +1,10 @@
 package aliyun_igraph_go_sdk
 
 type Response struct {
-	Result []Result `json:"result"`
+	Result []*Result `json:"result"`
 }
 
-func NewResponse(results []Result) *Response {
+func NewResponse(results []*Result) *Response {
 	return &Response{Result: results}
 }
 
@@ -31,8 +31,8 @@ func (m MatchItem) getResultCount() int {
 }
 
 type ReadResult struct {
-	ErrorInfo []string `json:"error_info"`
-	Result    []Result `json:"result"`
+	ErrorInfo []string  `json:"error_info"`
+	Result    []*Result `json:"result"`
 }
 
 type WriteResult struct {

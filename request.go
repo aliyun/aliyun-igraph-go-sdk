@@ -1,84 +1,70 @@
 package aliyun_igraph_go_sdk
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
-	"net"
+	"github.com/valyala/fasthttp"
 	"net/http"
 	"time"
 )
 
 var (
 	defaultRequestTimeout = 3 * time.Second
-	tr                    = &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout:   defaultRequestTimeout,
-			KeepAlive: 30 * time.Minute,
-		}).DialContext,
-		MaxIdleConnsPerHost:   200,
-		MaxIdleConns:          200,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 10 * time.Second,
-	}
-	defaultHttpClient = &http.Client{
-		Timeout:   defaultRequestTimeout,
-		Transport: tr,
+	defaultHttpClient     = &fasthttp.Client{
+		MaxConnsPerHost: 200,
+		ReadTimeout:     defaultRequestTimeout,
+		WriteTimeout:    defaultRequestTimeout,
 	}
 )
 
-func request(client *Client, method, uri string, headers map[string]string, body []byte) (*http.Response, error) {
+func request(client *Client, method, uri string, headers map[string]string, body []byte) ([]byte, int, error) {
 	return realRequest(client, method, uri, headers, body)
 }
 
 // request sends a request to Be Service.
 // @note if error is nil, you must call http.Response.Body.Close() to finalize reader
 func realRequest(client *Client, method, uri string, headers map[string]string,
-	body []byte) (*http.Response, error) {
+	body []byte) ([]byte, int, error) {
 
 	headers["Host"] = client.Endpoint
-
 	digest, err := signature(client)
 	if err != nil {
-		return nil, NewClientError(err)
+		return nil, 0, NewClientError(err)
 	}
 	auth := fmt.Sprintf("Basic %v", digest)
 	headers["Authorization"] = auth
 
 	// Initialize http request
-	reader := bytes.NewReader(body)
-
 	// Handle the endpoint
 	urlStr := fmt.Sprintf("%s/%s", client.Endpoint, uri)
-	req, err := http.NewRequest(method, urlStr, reader)
-	if err != nil {
-		return nil, NewClientError(err)
-	}
+
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer func() {
+		// release resource
+		fasthttp.ReleaseResponse(resp)
+		fasthttp.ReleaseRequest(req)
+	}()
+	req.SetRequestURI(urlStr)
+	req.Header.SetMethod(method)
+	req.SetBody(body)
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
 
-	resp, err := client.httpClient.Do(req)
+	err = client.httpClient.Do(req, resp)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// Parse the be error from body.
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode() != http.StatusOK {
 		err := &BadResponseError{}
-		err.HTTPCode = resp.StatusCode
-		defer resp.Body.Close()
-		buf, ioErr := ioutil.ReadAll(resp.Body)
-		if ioErr != nil {
-			return nil, NewBadResponseError(ioErr.Error(), resp.Header, resp.StatusCode)
-		}
-		err.RespBody = string(buf)
-		err.RespHeader = resp.Header
-		return nil, err
+		err.HTTPCode = resp.StatusCode()
+		err.RespBody = string(resp.Body())
+		return nil, resp.StatusCode(), err
 	}
-	return resp, nil
+	return resp.Body(), resp.StatusCode(), nil
 }
 
 func signature(client *Client) (string, error) {

@@ -4,12 +4,22 @@ import (
 	"errors"
 	"net"
 	"net/url"
-	"strings"
 )
 
 var (
-	localIp, _ = LocalIP()
+	localIp   net.IP
+	queryIP   string
+	configStr = "config{outfmt=json&no_cache=false&cache_only=false}"
 )
+
+func init() {
+	localIp, _ = LocalIP()
+	if localIp != nil {
+		queryIP = "ip=127.0.0.1"
+	} else {
+		queryIP = "ip=" + localIp.String()
+	}
+}
 
 type ReadRequest struct {
 	QueryString string            `json:"query_string"`
@@ -33,25 +43,9 @@ func (r *ReadRequest) SetQueryParams(params map[string]string) *ReadRequest {
 	return r
 }
 
-func (r *ReadRequest) BuildUri() url.URL {
-	uri := url.URL{Path: "app"}
-	query := map[string]string{}
-	if len(r.QueryParams) != 0 {
-		for k, v := range r.QueryParams {
-			query[k] = v
-		}
-	}
-
-	var queryIP = ""
-	if localIp != nil {
-		queryIP = "ip=127.0.0.1"
-	} else {
-		queryIP = "ip=" + localIp.String()
-	}
-	var configStr = "config{outfmt=json&no_cache=false&cache_only=false}"
-	queryStr := queryIP + "?" + url.QueryEscape(configStr+"&&"+r.QueryString)
-	uri.RawQuery = strings.Join([]string{"app=gremlin", "src=" + query["src"], queryStr}, "&")
-	return uri
+func (r *ReadRequest) BuildUri() string {
+	rawUrl := queryIP + "?" + url.QueryEscape(configStr+"&&"+r.QueryString)
+	return rawUrl
 }
 
 func LocalIP() (net.IP, error) {
