@@ -57,14 +57,17 @@ func realRequest(client *Client, method, uri string, headers map[string]string,
 		return nil, 0, err
 	}
 
+	respBody := resp.Body()
+	buf := make([]byte, len(respBody))
+	copy(buf, respBody)
 	// Parse the be error from body.
 	if resp.StatusCode() != http.StatusOK {
 		err := &BadResponseError{}
 		err.HTTPCode = resp.StatusCode()
-		err.RespBody = string(resp.Body())
+		err.RespBody = string(buf)
 		return nil, resp.StatusCode(), err
 	}
-	return resp.Body(), resp.StatusCode(), nil
+	return buf, resp.StatusCode(), nil
 }
 
 func signature(client *Client) (string, error) {
