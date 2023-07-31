@@ -48,7 +48,9 @@ func (c *Client) WithRequestTimeout(timeout time.Duration) *Client {
 }
 
 func (c *Client) InitConfig(clientConfig ClientConfig) {
-	c.httpClient.MaxConnsPerHost = clientConfig.MaxConnsPerHost
+	if clientConfig.MaxConnsPerHost > 0 {
+		c.httpClient.MaxConnsPerHost = clientConfig.MaxConnsPerHost
+	}
 	c.clientConfig = clientConfig
 }
 
