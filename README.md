@@ -2,12 +2,12 @@
 
 # 使用方法
 ## 配置
-// 必选配置，指定endpoint、用户名、密码
-var client = aliyun_igraph_go_sdk.NewClient("your_endpoint", "your_user_name", "your_password", "your_src")
-your_endpoint: igraph-cn-xxxx.igraph.aliyuncs.com
-your_user_name: 购买实例时设置的用户名
-your_pass_word: 购买实例时设置的密码
-your_src: 用来标记来源的标识
+    // 必选配置，指定endpoint、用户名、密码
+    var client = aliyun_igraph_go_sdk.NewClient("your_endpoint", "your_user_name", "your_password", "your_src")
+    your_endpoint: igraph-cn-xxxx.igraph.aliyuncs.com
+    your_user_name: 购买实例时设置的用户名
+    your_pass_word: 购买实例时设置的密码
+    your_src: 用来标记来源的标识
 
 ## 查询使用样例
 
