@@ -14,11 +14,12 @@ const (
 )
 
 type Client struct {
-	Endpoint   string
-	UserName   string
-	PassWord   string
-	Src        string
-	httpClient *fasthttp.Client
+	Endpoint     string
+	UserName     string
+	PassWord     string
+	Src          string
+	clientConfig ClientConfig
+	httpClient   *fasthttp.Client
 }
 
 func NewClient(endpoint string, userName string, passWord string, src string) *Client {
@@ -34,11 +35,21 @@ func NewClient(endpoint string, userName string, passWord string, src string) *C
 	}
 }
 
+type ClientConfig struct {
+	MaxConnsPerHost int
+	RequestTimeout  time.Duration
+}
+
 // WithRequestTimeout with custom timeout for a request
 func (c *Client) WithRequestTimeout(timeout time.Duration) *Client {
 	c.httpClient.ReadTimeout = timeout
 	c.httpClient.WriteTimeout = timeout
 	return c
+}
+
+func (c *Client) InitConfig(clientConfig ClientConfig) {
+	c.httpClient.MaxConnsPerHost = clientConfig.MaxConnsPerHost
+	c.clientConfig = clientConfig
 }
 
 func (c *Client) buildReadUrl(readRequest *ReadRequest) url.URL {

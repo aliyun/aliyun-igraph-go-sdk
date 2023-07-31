@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	defaultRequestTimeout = 3 * time.Second
-	defaultHttpClient     = &fasthttp.Client{
-		MaxConnsPerHost: 200,
+	defaultRequestTimeout  = 1 * time.Second
+	defaultMaxConnsPerHost = 512
+	defaultHttpClient      = &fasthttp.Client{
+		MaxConnsPerHost: defaultMaxConnsPerHost,
 		ReadTimeout:     defaultRequestTimeout,
 		WriteTimeout:    defaultRequestTimeout,
 	}
@@ -48,6 +49,11 @@ func realRequest(client *Client, method, uri string, headers map[string]string,
 	req.SetRequestURI(urlStr)
 	req.Header.SetMethod(method)
 	req.SetBody(body)
+	if client.clientConfig.RequestTimeout == 0 {
+		req.SetTimeout(defaultRequestTimeout)
+	} else {
+		req.SetTimeout(client.clientConfig.RequestTimeout)
+	}
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
