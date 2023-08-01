@@ -9,9 +9,17 @@
     your_pass_word: 购买实例时设置的密码
     your_src: 用来标记来源的标识
 
+    var config = aliyun_igraph_go_sdk.ClientConfig{
+				MaxConnsPerHost: 128,
+				RequestTimeout:  100 * time.Millisecond,
+			}
+    RequestTimeout: 请求超时设置 默认是1s
+    MaxConnsPerHost: 单机连接数上限 默认512
+
 ## 查询使用样例
 
     var client = aliyun_igraph_go_sdk.NewClient("http://igraph-cn-xxxx.igraph.aliyuncs", "username", "password", "src")
+    client.InitConfig(config)
     m := make(map[string]string)
     readRequest := &aliyun_igraph_go_sdk.ReadRequest{QueryString: "GremlinQuery", QueryParams: m}
     resp, err := client.Read(*readRequest)
