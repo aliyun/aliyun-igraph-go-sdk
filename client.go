@@ -1,6 +1,7 @@
 package aliyun_igraph_go_sdk
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/valyala/fasthttp"
@@ -82,7 +83,9 @@ func (c *Client) Read(readRequest *ReadRequest) (*Response, error) {
 	}
 
 	readResult := ReadResult{}
-	if jErr := json.Unmarshal(body, &readResult); jErr != nil {
+	d := json.NewDecoder(bytes.NewReader([]byte(body)))
+	d.UseNumber()
+	if jErr := d.Decode(&readResult); jErr != nil {
 		fmt.Println(jErr)
 		return nil, NewBadResponseError("Illegal readResult:"+string(body), nil, statusCode)
 	}
