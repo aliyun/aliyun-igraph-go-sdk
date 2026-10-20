@@ -1,6 +1,6 @@
 module github.com/aliyun/aliyun-igraph-go-sdk
 
-go 1.19
+go 1.24
 
 require (
 	github.com/go-kit/kit v0.12.0
@@ -15,7 +15,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
